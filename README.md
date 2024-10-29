@@ -4,54 +4,41 @@
 
 This goal of this project it to develop a LLM from scratch that can translate text-based questions into SQL queries. Such a model is useful in scenarios where users need to interact with databases using natural language, making data access more intuitive. The project will follow a structured timeline, focusing on data collection, preprocessing, model setup, and iterative fine-tuning.
 
-## Weekly Goals
 
-To ensure steady progress, the following weekly goals have been established:
+## Contents
 
-- **Week 1 (Oct 29 - Oct 30): Infrastructure, MLP, and Project Sketch**
-  - **Infrastructure**:
-    - Set up a GitHub repository for the project.
-    - Make at least one commit to initialize the repository.
-    - Open at least one issue to outline initial tasks or questions.
-  - **Minimum Learning Product (MLP)**:
-    - Implement preliminary code that generates a basic output (e.g., a simple text-to-text transformation).
-    - Establish a basic testing framework to validate outputs.
-    - Implement at least one evaluation metric (e.g., accuracy) to assess initial outputs.
-  - **Project Sketch**:
-    - Provide a rough description of the project's goal and scope in the README.
-    - Decide on preliminary data sources (e.g., Spider, WikiSQL) and the architecture (GPT-based) to be used.
+1. **Working with Text Data**  
+   - Develop tokenization and encoding functions, including special tokens and BPE.
+2. **Implementing Attention Mechanisms**  
+   - start building of attention mechanisms, critical for efficient LLM function.
+3. **Building a GPT Model from Scratch**  
+   - Coding and training a GPT model specifically for text generation.
+4. **Training the LLM on Labeled and Unlabeled Data**  
+   - Techniques for model evaluation and understanding decoding strategies like temperature and top-k sampling.
+5. **Fine-Tuning to Follow Instructions (Optional)**  
+   - Fine-tuning to enhance model accuracy and usability, especially for specific instructions.
 
-- **Week 2 (Oct 31 - Nov 6): Data Collection**
-  - Gather Text-to-SQL datasets (e.g.,WikiSQL, Spider) for training and testing.
-  - Ensure datasets align with the input format required by GPT.
+## Environment Setup
 
-- **Week 3 (Nov 7 - Nov 13): Data Preprocessing**
-  - Clean, normalize, and tokenize both text and SQL data.
-  - Prepare datasets to be compatible with the GPT-based training process.
+This section provides steps to set up a conda environment for this project.
 
-- **Week 4 (Nov 14 - Nov 20): Prompt Engineering & Embeddings**
-  - Design initial prompts to guide the model in generating SQL queries.
-  - Implement SQL-specific embeddings if needed to enhance the model's understanding.
+### Prerequisites
+- Install [Anaconda](https://www.anaconda.com/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
+- Ensure Python version 3.12.4 is available.
 
-- **Week 5 (Nov 21 - Nov 27): Model Setup & Initial Training**
-  - Configure the GPT model architecture specifically for text-to-SQL tasks.
-  - Perform initial training on a small dataset to verify the functionality of the model.
-
-- **Week 6 (Nov 28 - Dec 4): Fine-Tuning on Text-to-SQL Data**
-  - Begin fine-tuning the model using a larger Text-to-SQL dataset.
-  - Focus on optimizing the model's SQL generation capabilities through iterative training.
-
-- **Week 7 (Dec 5 - Dec 11): Evaluation & Additional Fine-Tuning**
-  - Evaluate the model's performance in generating SQL queries.
-  - Adjust prompts and hyperparameters, continuing fine-tuning based on evaluation results.
-
-- **Week 8 (Dec 12 - Dec 18): Prototype Finalization**
-  - Make final adjustments to the model to ensure accurate SQL generation.
-  - Conduct comprehensive testing across various Text-to-SQL prompts.
-
-- **Goal (Dec 19 - Dec 20): Working Prototype**
-  - Prepare a fully functional Text-to-SQL prototype ready for demonstration and feedback.
-
+### Setting Up the Environment
+1. **Create a new conda environment:**
+   ```bash
+   conda create -n text2sql python=3.12.4
+   ```
+2. **Activate the environment:**
+   ```bash
+   conda activate text2sql
+   ```
+3. **Deactivate when done:**
+   ```bash
+   conda deactivate
+   ```
 
 ## Data Sources
 
