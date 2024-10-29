@@ -47,6 +47,7 @@ The datasets we are using include:
 - **WikiSQL Dataset**: A supervised dataset for natural language to SQL mapping.
 - **Spider Dataset**: A large-scale Text-to-SQL dataset.
 - **Custom Datasets**: Any additional data gathered to meet specific project needs.
+- **Awesome Text2SQL** - https://github.com/eosphoros-ai/Awesome-Text2SQL
 
 ## Model
 
