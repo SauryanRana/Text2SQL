@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project aims to develop a LLM from scratch that can translate text-based questions into SQL queries. Such a model is useful in scenarios where users need to interact with databases using natural language, making data access more intuitive. The project will follow a structured timeline, focusing on data collection, preprocessing, model setup, and iterative fine-tuning.
+This goal of this project it to develop a LLM from scratch that can translate text-based questions into SQL queries. Such a model is useful in scenarios where users need to interact with databases using natural language, making data access more intuitive. The project will follow a structured timeline, focusing on data collection, preprocessing, model setup, and iterative fine-tuning.
 
 ## Weekly Goals
 
@@ -49,7 +49,7 @@ To ensure steady progress, the following weekly goals have been established:
   - Make final adjustments to the model to ensure accurate SQL generation.
   - Conduct comprehensive testing across various Text-to-SQL prompts.
 
-- **Goal (Dec 24 - Dec 25): Working Prototype**
+- **Goal (Dec 19 - Dec 20): Working Prototype**
   - Prepare a fully functional Text-to-SQL prototype ready for demonstration and feedback.
 
 
