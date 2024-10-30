@@ -2,6 +2,7 @@ import random
 import time
 import string
 
+
 def dummy_llm(input_text):
     """
     Simulates an LLM by generating gibberish text based on input length.
@@ -28,6 +29,7 @@ def dummy_llm(input_text):
         words[pos] = words[pos] + random.choice(punctuation)
     
     return ' '.join(words)
+
 
 def main():
     print("Welcome to the Dummy LLM Terminal Interface!")
@@ -65,6 +67,7 @@ def main():
             break
         except Exception as e:
             print(f"An error occurred: {e}")
+
 
 if __name__ == "__main__":
     main()
