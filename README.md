@@ -80,67 +80,42 @@ We are building our Text-to-SQL model based on the GPT architecture. This archit
 
 ```bash
 
-llm-from-scratch/
-├── configs/
-│   ├── model_config.json      # Model architecture parameters
-│   ├── training_config.json   # Training hyperparameters
-│   └── data_config.json       # Data processing settings
-│
-├── src/
-│   ├── model/
-│   │   ├── __init__.py
-│   │   ├── attention.py       # Attention mechanisms
-│   │   ├── embeddings.py      # Token and positional embeddings
-│   │   ├── feed_forward.py    # Feed-forward network layers
-│   │   ├── transformer.py     # Transformer blocks
-│   │   └── llm.py             # Main model architecture
+├── LLM-Training-Project/
+│   ├── configs/
+│   │   ├── training_config.yaml     # Configuration for training parameters
+│   │   ├── model_config.json        # Model-specific configuration (GPT-2, etc.)
+│   │   └── dataset_config.yaml      # Dataset-related configuration (paths, splits)
 │   │
 │   ├── data/
-│   │   ├── __init__.py
-│   │   ├── preprocessing.py   # Text cleaning and tokenization
-│   │   ├── dataset.py         # Dataset and DataLoader setup
-│   │   └── utils.py           # Data utility functions
+│   │   ├── raw/                     # Raw datasets go here
+│   │   └── processed/               # Processed data (e.g., tokenized) 
 │   │
-│   ├── training/
-│   │   ├── __init__.py
-│   │   ├── trainer.py         # Training loop
-│   │   ├── optimizer.py       # Optimizer setup
-│   │   ├── scheduler.py       # Learning rate scheduling
-│   │   └── utils.py           # Training utilities
+│   ├── src/
+│   │   ├── __init__.py              # Package initialization
+│   │   ├── train.py                 # Main training script
+│   │   ├── evaluate.py              # Evaluation script
+│   │   ├── data_processing.py       # Data loading and preprocessing
+│   │   ├── model.py                 # Model initialization and setup
+│   │   ├── utils.py                 # Utility functions (e.g., logging)
+│   │   └── custom_layers.py         # (Optional) Custom model layers if any
 │   │
-│   └── utils/
-│       ├── __init__.py
-│       ├── logging.py         # Logging setup
-│       ├── metrics.py         # Evaluation metrics
-│       └── checkpoint.py      # Model saving and loading
-│
-├── scripts/
-│   ├── train.py               # Training script
-│   ├── evaluate.py            # Evaluation script
-│   ├── generate.py            # Text generation script
-│   └── preprocess_data.py     # Data preparation script
-│
-├── notebooks/
-│   ├── data_exploration.ipynb
-│   ├── model_analysis.ipynb
-│   └── results_visualization.ipynb
-│
-├── tests/
-│   ├── test_model.py          # Unit tests for model components
-│   ├── test_data.py           # Unit tests for data components
-│   └── test_training.py       # Unit tests for training loop
-│
-├── data/
-│   ├── raw/                   # Original, unprocessed data
-│   ├── processed/             # Processed data, ready for training
-│   └── tokenizer/             # Tokenizer and vocabulary files
-│
-├── checkpoints/               # Directory for saved model checkpoints
-│
-├── logs/                      # Training and evaluation logs
-│
-├── requirements.txt           # Project dependencies
-├── setup.py                   # Installation setup
-├── README.md                  # Project overview and documentation
-└── .gitignore                 # Git ignore file for version control
+│   ├── logs/
+│   │   └── training_logs/           # Training logs, output from Accelerate, etc.
+│   │
+│   ├── outputs/
+│   │   ├── checkpoints/             # Model checkpoints
+│   │   └── metrics/                 # Evaluation metrics (e.g., loss, accuracy)
+│   │
+│   ├── notebooks/
+│   │   └── EDA.ipynb                # Exploratory data analysis and visualization
+│   │
+│   ├── scripts/
+│   │   ├── train.sh                 # Shell script to launch training (optional)
+│   │   └── evaluate.sh              # Shell script to launch evaluation
+│   │
+│   ├── .gitignore                   # Ignore files like checkpoints, data
+│   ├── README.md                    # Project documentation
+│   ├── requirements.txt             # Python dependencies
+│   └── setup.py                     # Installation and setup script
+
 ```
