@@ -34,7 +34,7 @@ This section provides steps to set up a conda environment for this project.
 
 The datasets we are using include:
 
-- **WikiSQL Dataset**: A supervised dataset for natural language to SQL mapping.
+- **WikiSQL Dataset**: [Data](https://github.com/salesforce/WikiSQL) ,[GD Link ](https://drive.google.com/drive/folders/1I9AiEDlMb_3KWWfLeVvfjHVK87h3nGHo?usp=drive_link), [Collab](https://colab.research.google.com/drive/1dOTP5Fir04MLDD0nS8YpenwnWp8uG-de?usp=sharing)
 - **Spider Dataset**: A large-scale Text-to-SQL dataset.
 - **Custom Datasets**: Any additional data gathered to meet specific project needs.
 
