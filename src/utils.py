@@ -1,6 +1,5 @@
 from typing import Dict, List
 import sqlparse
-
 from lib.dbengine import DBEngine
 from lib.query import Query
 
@@ -104,33 +103,49 @@ def compute_execution_accuracy(predictions_text, labels_text, val_dataset, db_en
     return execution_correct / len(predictions_text)
 
 
-def compute_metrics(eval_preds, val_dataset, tokenizer, db_path):
-    predictions, labels = eval_preds
-    predictions_text = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
-    labels_text = [tokenizer.decode(label, skip_special_tokens=True) for label in labels]
-    labels_canonical = [example["canonical_sql"] for example in val_dataset]
-
-    # Parse predictions to canonical form and evaluate
-    predictions_canonical = [
-        parse_sql_to_canonical(pred_text, example["table"]["header"])
-        for pred_text, example in zip(predictions_text, val_dataset)
-    ]
-
-    # Calculate detailed metrics
-    sel_acc = sel_accuracy(predictions_canonical, labels_canonical)
-    agg_acc = agg_accuracy(predictions_canonical, labels_canonical)
-    conds_acc = conds_accuracy(predictions_canonical, labels_canonical)
-    overall_accuracy = sum(1 for pred, label in zip(predictions_canonical, labels_canonical) if pred == label) / len(
-        predictions)
-
-    # Calculate execution accuracy
+def create_metrics_computer(val_dataset, tokenizer, db_path):
+    """
+    Creates a compute_metrics function with preloaded resources.
+    """
+    # Preload the database engine
     db_engine = DBEngine(db_path)
-    exec_acc = compute_execution_accuracy(predictions_text, labels_text, val_dataset, db_engine)
 
-    return {
-        "overall_accuracy": overall_accuracy,
-        "sel_accuracy": sel_acc,
-        "agg_accuracy": agg_acc,
-        "conds_accuracy": conds_acc,
-        "execution_accuracy": exec_acc,
-    }
+    val_data_by_text = {example["sql"]["human_readable"]: example for example in val_dataset}
+
+    def compute_metrics(eval_preds):
+        """
+        Metrics computation function that reuses preloaded resources.
+        """
+        predictions, labels = eval_preds
+
+        # Decode predictions and labels
+        predictions_text = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
+        labels_text = [tokenizer.decode(label, skip_special_tokens=True) for label in labels]
+        labels_data = [example[labels_text] for example in val_data_by_text]
+
+        # Parse predictions to canonical form
+        predictions_canonical = [
+            parse_sql_to_canonical(pred_text, example["table"]["header"])
+            for pred_text, example in zip(predictions_text, labels_data)
+        ]
+
+        # Calculate detailed metrics
+        labels_canonical = [label["sql"] for label in labels_data]
+        sel_acc = sel_accuracy(predictions_canonical, labels_canonical)
+        agg_acc = agg_accuracy(predictions_canonical, labels_canonical)
+        conds_acc = conds_accuracy(predictions_canonical, labels_canonical)
+        overall_accuracy = sum(
+            1 for pred, label in zip(predictions_canonical, labels_canonical) if pred == label) / len(predictions)
+
+        # Calculate execution accuracy using the preloaded db_engine
+        exec_acc = compute_execution_accuracy(predictions_text, labels_text, val_dataset, db_engine)
+
+        return {
+            "overall_accuracy": overall_accuracy,
+            "sel_accuracy": sel_acc,
+            "agg_accuracy": agg_acc,
+            "conds_accuracy": conds_acc,
+            "execution_accuracy": exec_acc,
+        }
+
+    return compute_metrics
