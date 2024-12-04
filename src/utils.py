@@ -1,10 +1,34 @@
+import os
+import re
 from typing import Dict, List
-import sqlparse
+
+import numpy as np
+import Levenshtein
+
 from lib.dbengine import DBEngine
 from lib.query import Query
 
 
-def preprocess_function(batch: Dict[str, List], tokenizer) -> Dict[str, List]:
+# Find the index of the closest string in the list using Levenshtein distance
+def closest_string(search_str, str_list):
+    distances = [Levenshtein.distance(search_str, s) for s in str_list]
+    closest_index = min(range(len(distances)), key=distances.__getitem__)
+    return closest_index
+
+
+def filter_function(sample, tokenizer, input_max_length=96, output_max_length=48):
+    # Tokenize without truncation
+    full_input = f"{sample['question']}|{'|'.join(sample['table']['header'])}"
+    target_sql = sample['sql']['human_readable']
+
+    tokenized_input = tokenizer(full_input, truncation=False)["input_ids"]
+    tokenized_target = tokenizer(target_sql, truncation=False)["input_ids"]
+
+    # Keep samples that meet length requirements
+    return len(tokenized_input) <= input_max_length and len(tokenized_target) <= output_max_length
+
+
+def preprocess_function(batch, tokenizer, input_max_length=96, output_max_length=48, padding="max_length") -> Dict[str, List]:
     inputs = []
     targets = []
 
@@ -14,12 +38,14 @@ def preprocess_function(batch: Dict[str, List], tokenizer) -> Dict[str, List]:
 
         # Combine question and headers to create input text
         full_input = f"{question}|{table_headers_text}"
+
         inputs.append(full_input)
         targets.append(target_sql)
 
-    model_inputs = tokenizer(inputs, max_length=64, truncation=True, padding="max_length")
-    labels = tokenizer(targets, max_length=64, truncation=True, padding="max_length")["input_ids"]
-    model_inputs["labels"] = labels
+    # Tokenize only the filtered sequences
+    model_inputs = tokenizer(inputs, max_length=input_max_length, truncation=True, padding=padding)
+    labels = tokenizer(targets, max_length=output_max_length, truncation=True, padding=padding)["input_ids"]
+    model_inputs["labels"] = [[token if token != tokenizer.pad_token_id else -100 for token in label] for label in labels]
 
     return model_inputs
 
@@ -29,12 +55,11 @@ def preprocess_function(batch: Dict[str, List], tokenizer) -> Dict[str, List]:
 # Query.from_sequence does something similar but it uses the tokenized output of the model which would require us
 # to use a specific tokenizer (Stanza I think? Which is deprecated now but still runnable in a docker container?) so
 # that each SQL keyword is represented by its specific token. Maybe in the future.
-def parse_sql_to_canonical(sql_query, table_headers):
-    parsed = sqlparse.parse(sql_query)[0]
-    tokens = [token for token in parsed.tokens if not token.is_whitespace]
+def parse_sql_to_canonical(query, table_header):
+    # Initialize the canonical form
     canonical_form = {
         "sel": None,
-        "agg": 0,
+        "agg": 0,  # Default to 0 (no aggregation)
         "conds": {
             "column_index": [],
             "operator_index": [],
@@ -42,25 +67,50 @@ def parse_sql_to_canonical(sql_query, table_headers):
         }
     }
 
-    if tokens[0].ttype is sqlparse.tokens.DML and tokens[0].value.upper() == "SELECT":
-        select_clause = tokens[1]
-        selected_column = select_clause.get_real_name()
-        canonical_form["sel"] = table_headers.index(selected_column)
+    # Define mappings for aggregate functions
+    agg_mapping = {
+        "": 0,
+        "MAX": 1,
+        "MIN": 2,
+        "COUNT": 3,
+        "SUM": 4,
+        "AVG": 5
+    }
 
-        if select_clause.get_name() != selected_column:
-            aggregation_function = select_clause.get_name().upper()
-            canonical_form["agg"] = ["", "MAX", "MIN", "COUNT", "SUM", "AVG"].index(aggregation_function)
+    cond_mapping = {'=': 0, '>': 1, '<': 2}
 
-    if "WHERE" in sql_query.upper():
-        where_index = [i for i, t in enumerate(tokens) if t.value.upper() == "WHERE"][0]
-        where_clause = tokens[where_index + 1]
-        condition_column = where_clause.left.get_real_name()
-        condition_operator = where_clause.token_next_match(1, sqlparse.tokens.Operator)
-        condition_value = where_clause.right.get_real_name().strip("'")
+    # Extract SELECT part
+    select_match = re.search(r'SELECT\s+(.*?)(?:\s+FROM|$)', query, re.IGNORECASE)
+    if select_match:
+        sel_part = select_match.group(1).strip()
+        # Check for aggregate functions
+        agg_match = re.match(r'(MIN|MAX|COUNT|SUM|AVG)\s+(.*)', sel_part, re.IGNORECASE)
+        if agg_match:
+            agg_func = agg_match.group(1).upper()  # Extract the aggregation function
+            canonical_form['agg'] = agg_mapping[agg_func]  # Map it to its ID
+            canonical_form['sel'] = closest_string(agg_match.group(2).strip(), table_header)  # Extract the column name
+        else:
+            canonical_form['sel'] = closest_string(sel_part, table_header)  # No aggregation, use as-is
 
-        canonical_form["conds"]["column_index"].append(table_headers.index(condition_column))
-        canonical_form["conds"]["operator_index"].append(["=", ">", "<", ">=", "<=", "!="].index(condition_operator.value))
-        canonical_form["conds"]["condition"].append(condition_value)
+    # Extract WHERE part
+    where_match = re.search(r'WHERE\s+(.*)', query, re.IGNORECASE)
+    if where_match:
+        conditions = where_match.group(1).strip().split('AND')
+        for cond in conditions:
+            # Match column, operator, and value dynamically
+            match = re.match(r'^(.*?)\s*([=<>]+)\s*(.*)$', cond.strip())
+            if match:
+                col = closest_string(match.group(1).strip(), table_header)
+                op = cond_mapping.get(match.group(2).strip())
+                value = match.group(3).strip()
+
+                # Retain full condition values, including parentheses, percentages, etc.
+                # canonical_form['conds'].append([col, op, value])
+                canonical_form['conds']['column_index'].append(col)
+                canonical_form['conds']['operator_index'].append(op)
+                canonical_form['conds']['condition'].append(value)
+            else:
+                continue  # Skip invalid condition
 
     return canonical_form
 
@@ -85,22 +135,23 @@ def conds_accuracy(predictions, labels):
     return correct / len(predictions)
 
 
-def compute_execution_accuracy(predictions_text, labels_text, val_dataset, db_engine):
+def compute_execution_accuracy(predictions_sql, labels_sql, val_dataset, db_engine):
     execution_correct = 0
-    for pred_sql, label_sql, example in zip(predictions_text, labels_text, val_dataset):
-        table_id = example["table_id"]
+    for pred_sql, label_sql, example in zip(predictions_sql, labels_sql, val_dataset):
+        table_id = example["table"]["id"]
+        pred_sql["conds"] = list(zip(pred_sql["conds"]["column_index"], pred_sql["conds"]["operator_index"], pred_sql["conds"]["condition"]))
+        label_sql["conds"] = list(zip(label_sql["conds"]["column_index"], label_sql["conds"]["operator_index"], label_sql["conds"]["condition"]))
         try:
-            pred_result = db_engine.execute_query(table_id, Query.from_dict(
-                parse_sql_to_canonical(pred_sql, example["table"]["header"])))
-            gold_result = db_engine.execute_query(table_id, Query.from_dict(
-                parse_sql_to_canonical(label_sql, example["table"]["header"])))
+            pred_result = db_engine.execute_query(table_id, Query.from_dict(pred_sql))
+            gold_result = db_engine.execute_query(table_id, Query.from_dict(label_sql))
             if pred_result == gold_result:
                 execution_correct += 1
         except Exception as e:
             # Handle cases where the SQL is not executable
-            print(f"Execution error: {e}")
+            # print(f"Execution error: {e}")
+            pass
 
-    return execution_correct / len(predictions_text)
+    return execution_correct / len(predictions_sql)
 
 
 def create_metrics_computer(val_dataset, tokenizer, db_path):
@@ -108,20 +159,25 @@ def create_metrics_computer(val_dataset, tokenizer, db_path):
     Creates a compute_metrics function with preloaded resources.
     """
     # Preload the database engine
+    # Resolve absolute database path
+    db_path = os.path.abspath(db_path)
+    if not os.path.exists(db_path):
+        raise FileNotFoundError(f"Database file not found: {db_path}")
     db_engine = DBEngine(db_path)
 
-    val_data_by_text = {example["sql"]["human_readable"]: example for example in val_dataset}
+    val_data_by_text = {hash(tuple(label)): {"sql": sql, "table": table} for label, sql, table in zip(val_dataset["labels"], val_dataset["sql"], val_dataset["table"])}
 
     def compute_metrics(eval_preds):
         """
         Metrics computation function that reuses preloaded resources.
         """
         predictions, labels = eval_preds
+        predictions = np.where(predictions != -100, predictions, tokenizer.pad_token_id)
 
         # Decode predictions and labels
-        predictions_text = [tokenizer.decode(pred, skip_special_tokens=True) for pred in predictions]
-        labels_text = [tokenizer.decode(label, skip_special_tokens=True) for label in labels]
-        labels_data = [example[labels_text] for example in val_data_by_text]
+        predictions_text = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        labels_text = tokenizer.batch_decode(labels, skip_special_tokens=True)
+        labels_data = [val_data_by_text[hash(tuple(label))] for label in labels]
 
         # Parse predictions to canonical form
         predictions_canonical = [
@@ -130,7 +186,10 @@ def create_metrics_computer(val_dataset, tokenizer, db_path):
         ]
 
         # Calculate detailed metrics
-        labels_canonical = [label["sql"] for label in labels_data]
+        labels_canonical = [
+            parse_sql_to_canonical(label_text, example["table"]["header"])
+            for label_text, example in zip(labels_text, labels_data)
+        ]
         sel_acc = sel_accuracy(predictions_canonical, labels_canonical)
         agg_acc = agg_accuracy(predictions_canonical, labels_canonical)
         conds_acc = conds_accuracy(predictions_canonical, labels_canonical)
@@ -138,7 +197,7 @@ def create_metrics_computer(val_dataset, tokenizer, db_path):
             1 for pred, label in zip(predictions_canonical, labels_canonical) if pred == label) / len(predictions)
 
         # Calculate execution accuracy using the preloaded db_engine
-        exec_acc = compute_execution_accuracy(predictions_text, labels_text, val_dataset, db_engine)
+        exec_acc = compute_execution_accuracy(predictions_canonical, labels_canonical, labels_data, db_engine)
 
         return {
             "overall_accuracy": overall_accuracy,
