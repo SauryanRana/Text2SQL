@@ -45,7 +45,7 @@ def preprocess_function(batch, tokenizer, input_max_length=96, output_max_length
     # Tokenize only the filtered sequences
     model_inputs = tokenizer(inputs, max_length=input_max_length, truncation=True, padding=padding)
     labels = tokenizer(targets, max_length=output_max_length, truncation=True, padding=padding)["input_ids"]
-    model_inputs["labels"] = [[token if token != tokenizer.pad_token_id else -100 for token in label] for label in labels]
+    model_inputs["labels"] = labels
 
     return model_inputs
 
@@ -60,11 +60,7 @@ def parse_sql_to_canonical(query, table_header):
     canonical_form = {
         "sel": None,
         "agg": 0,  # Default to 0 (no aggregation)
-        "conds": {
-            "column_index": [],
-            "operator_index": [],
-            "condition": []
-        }
+        "conds": set()
     }
 
     # Define mappings for aggregate functions
@@ -104,11 +100,7 @@ def parse_sql_to_canonical(query, table_header):
                 op = cond_mapping.get(match.group(2).strip())
                 value = match.group(3).strip()
 
-                # Retain full condition values, including parentheses, percentages, etc.
-                # canonical_form['conds'].append([col, op, value])
-                canonical_form['conds']['column_index'].append(col)
-                canonical_form['conds']['operator_index'].append(op)
-                canonical_form['conds']['condition'].append(value)
+                canonical_form['conds'].add((col, op, value))
             else:
                 continue  # Skip invalid condition
 
@@ -124,23 +116,17 @@ def agg_accuracy(predictions, labels):
 
 
 def conds_accuracy(predictions, labels):
-    correct = 0
-    for pred, label in zip(predictions, labels):
-        if (
-            pred["conds"]["column_index"] == label["conds"]["column_index"]
-            and pred["conds"]["operator_index"] == label["conds"]["operator_index"]
-            and pred["conds"]["condition"] == label["conds"]["condition"]
-        ):
-            correct += 1
-    return correct / len(predictions)
+    return sum(1 for pred, label in zip(predictions, labels) if pred["conds"] == label["conds"]) / len(predictions)
+
+
+def lf_accuracy(predictions, labels):
+    return sum(1 for pred, label in zip(predictions, labels) if pred == label) / len(predictions)
 
 
 def compute_execution_accuracy(predictions_sql, labels_sql, val_dataset, db_engine):
     execution_correct = 0
     for pred_sql, label_sql, example in zip(predictions_sql, labels_sql, val_dataset):
         table_id = example["table"]["id"]
-        pred_sql["conds"] = list(zip(pred_sql["conds"]["column_index"], pred_sql["conds"]["operator_index"], pred_sql["conds"]["condition"]))
-        label_sql["conds"] = list(zip(label_sql["conds"]["column_index"], label_sql["conds"]["operator_index"], label_sql["conds"]["condition"]))
         try:
             pred_result = db_engine.execute_query(table_id, Query.from_dict(pred_sql))
             gold_result = db_engine.execute_query(table_id, Query.from_dict(label_sql))
@@ -193,14 +179,13 @@ def create_metrics_computer(val_dataset, tokenizer, db_path):
         sel_acc = sel_accuracy(predictions_canonical, labels_canonical)
         agg_acc = agg_accuracy(predictions_canonical, labels_canonical)
         conds_acc = conds_accuracy(predictions_canonical, labels_canonical)
-        overall_accuracy = sum(
-            1 for pred, label in zip(predictions_canonical, labels_canonical) if pred == label) / len(predictions)
+        lf_acc = lf_accuracy(predictions_canonical, labels_canonical)
 
         # Calculate execution accuracy using the preloaded db_engine
         exec_acc = compute_execution_accuracy(predictions_canonical, labels_canonical, labels_data, db_engine)
 
         return {
-            "overall_accuracy": overall_accuracy,
+            "overall_accuracy": lf_acc,
             "sel_accuracy": sel_acc,
             "agg_accuracy": agg_acc,
             "conds_accuracy": conds_acc,
