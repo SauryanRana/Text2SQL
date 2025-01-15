@@ -28,26 +28,28 @@ def filter_function(sample, tokenizer, input_max_length=96, output_max_length=48
     return len(tokenized_input) <= input_max_length and len(tokenized_target) <= output_max_length
 
 
-def preprocess_function(batch, tokenizer, input_max_length=96, output_max_length=48, padding="max_length") -> Dict[str, List]:
-    inputs = []
-    targets = []
+def preprocess_function(batch):
+    batch["input_text"] = []
+    batch["label_text"] = []
 
     for question, table, sql in zip(batch["question"], batch["table"], batch["sql"]):
-        table_headers_text = "|".join(table["header"])
-        target_sql = sql["human_readable"]  # Use the human-readable SQL field
-
+        table_headers_text = "[SEP]".join(table["header"])
         # Combine question and headers to create input text
-        full_input = f"{question}|{table_headers_text}"
+        full_input = f"{question}[SEP]{table_headers_text}"
 
-        inputs.append(full_input)
-        targets.append(target_sql)
+        batch["input_text"].append(full_input)
+        batch["label_text"].append(sql["human_readable"])
 
-    # Tokenize only the filtered sequences
-    model_inputs = tokenizer(inputs, max_length=input_max_length, truncation=True, padding=padding)
-    labels = tokenizer(targets, max_length=output_max_length, truncation=True, padding=padding)["input_ids"]
-    model_inputs["labels"] = labels
+    return batch
 
-    return model_inputs
+
+def tokenize(batch, tokenizer, input_max_length=96, output_max_length=48, padding="max_length"):
+    inputs = tokenizer(batch["input_text"], max_length=input_max_length, truncation=True, padding=padding)
+    labels = tokenizer(batch["label_text"], max_length=output_max_length, truncation=True, padding=padding)["input_ids"]
+
+    inputs["labels"] = labels
+
+    return inputs
 
 
 # this function transforms the string output of the model into the canonical representation wikiSQL uses
