@@ -43,7 +43,20 @@ def preprocess_function(batch):
     return batch
 
 
-def tokenize(batch, tokenizer, input_max_length=96, output_max_length=48, padding="max_length"):
+def encode_rare_chars(batch, mapping):
+    """
+    Replace characters in the text field with their respective mappings.
+
+    :param batch: A batch of examples with a 'input_text' and 'label_text' field.
+    :param mapping: A mapping from rare characters to a sequence of special token and index.
+    :return: Processed examples.
+    """
+    batch['input_text'] = [''.join(mapping.get(char, char) for char in text) for text in batch['input_text']]
+    batch['label_text'] = [''.join(mapping.get(char, char) for char in text) for text in batch['label_text']]
+    return batch
+
+
+def tokenize(batch, tokenizer, input_max_length=128, output_max_length=64, padding="max_length"):
     inputs = tokenizer(batch["input_text"], max_length=input_max_length, truncation=True, padding=padding)
     labels = tokenizer(batch["label_text"], max_length=output_max_length, truncation=True, padding=padding)["input_ids"]
 
@@ -52,12 +65,27 @@ def tokenize(batch, tokenizer, input_max_length=96, output_max_length=48, paddin
     return inputs
 
 
+def decode_text(encoded_text, reverse_mapping):
+    """
+    Decode a string by replacing [MAP]x[/MAP] instances with the corresponding characters.
+
+    :param encoded_text: The text to decode.
+    :param reverse_mapping: The reverse mapping dictionary.
+    :return: Decoded text.
+    """
+    def replace_match(match):
+        token = match.group(0)
+        return reverse_mapping.get(token, token)
+
+    return re.sub(r"\[MAP\]\d+\[/MAP\]", replace_match, encoded_text)
+
+
 # this function transforms the string output of the model into the canonical representation wikiSQL uses
 # It allows more detailed analytics of which part of a query our model struggles with
 # Query.from_sequence does something similar but it uses the tokenized output of the model which would require us
 # to use a specific tokenizer (Stanza I think? Which is deprecated now but still runnable in a docker container?) so
 # that each SQL keyword is represented by its specific token. Maybe in the future.
-def parse_sql_to_canonical(query, table_header):
+def parse_sql_to_canonical(query, table_header, mapping=None):
     # Initialize the canonical form
     canonical_form = {
         "sel": None,
@@ -76,6 +104,9 @@ def parse_sql_to_canonical(query, table_header):
     }
 
     cond_mapping = {'=': 0, '>': 1, '<': 2}
+
+    if mapping:
+        query = decode_text(query, mapping)
 
     # Extract SELECT part
     select_match = re.search(r'SELECT\s+(.*?)(?:\s+FROM|$)', query, re.IGNORECASE)
@@ -142,7 +173,7 @@ def compute_execution_accuracy(predictions_sql, labels_sql, val_dataset, db_engi
     return execution_correct / len(predictions_sql)
 
 
-def create_metrics_computer(val_dataset, tokenizer, db_path):
+def create_metrics_computer(val_dataset, tokenizer, db_path, mapping=None):
     """
     Creates a compute_metrics function with preloaded resources.
     """
@@ -169,13 +200,13 @@ def create_metrics_computer(val_dataset, tokenizer, db_path):
 
         # Parse predictions to canonical form
         predictions_canonical = [
-            parse_sql_to_canonical(pred_text, example["table"]["header"])
+            parse_sql_to_canonical(pred_text, example["table"]["header"], mapping)
             for pred_text, example in zip(predictions_text, labels_data)
         ]
 
         # Calculate detailed metrics
         labels_canonical = [
-            parse_sql_to_canonical(label_text, example["table"]["header"])
+            parse_sql_to_canonical(label_text, example["table"]["header"], mapping)
             for label_text, example in zip(labels_text, labels_data)
         ]
         sel_acc = sel_accuracy(predictions_canonical, labels_canonical)
