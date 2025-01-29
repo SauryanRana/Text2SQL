@@ -1,5 +1,6 @@
 import os
 import re
+from random import randint
 from typing import Dict, List
 
 import numpy as np
@@ -9,9 +10,29 @@ from lib.dbengine import DBEngine
 from lib.query import Query
 
 
+def lcs_length(s1, s2):
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i - 1] == s2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+
+    return dp[m][n]
+
+
+def lcs_similarity(s1, s2):
+    lcs_len = lcs_length(s1, s2)
+    return lcs_len / (len(s1) + len(s2) - lcs_len)  # Normalization 2
+
+
 # Find the index of the closest string in the list using Levenshtein distance
 def closest_string(search_str, str_list):
-    distances = [Levenshtein.distance(search_str, s) for s in str_list]
+    # distances = [Levenshtein.distance(search_str, s) for s in str_list]
+    distances = [1 - lcs_similarity(search_str, s) for s in str_list]
     closest_index = min(range(len(distances)), key=distances.__getitem__)
     return closest_index
 
@@ -105,6 +126,8 @@ def parse_sql_to_canonical(query, table_header, mapping=None):
 
     cond_mapping = {'=': 0, '>': 1, '<': 2}
 
+    header_mapping = {column_name: i for i, column_name in enumerate(table_header)}
+
     if mapping:
         query = decode_text(query, mapping)
 
@@ -117,9 +140,9 @@ def parse_sql_to_canonical(query, table_header, mapping=None):
         if agg_match:
             agg_func = agg_match.group(1).upper()  # Extract the aggregation function
             canonical_form['agg'] = agg_mapping[agg_func]  # Map it to its ID
-            canonical_form['sel'] = closest_string(agg_match.group(2).strip(), table_header)  # Extract the column name
+            canonical_form['sel'] = closest_string(agg_match.group(2).strip(), table_header) #  header_mapping.get(agg_match.group(2).strip(), randint(0, len(header_mapping)-1))  # Extract the column name
         else:
-            canonical_form['sel'] = closest_string(sel_part, table_header)  # No aggregation, use as-is
+            canonical_form['sel'] = closest_string(sel_part, table_header)  # header_mapping.get(sel_part, randint(0, len(header_mapping)-1))  # No aggregation, use as-is
 
     # Extract WHERE part
     where_match = re.search(r'WHERE\s+(.*)', query, re.IGNORECASE)
@@ -129,11 +152,11 @@ def parse_sql_to_canonical(query, table_header, mapping=None):
             # Match column, operator, and value dynamically
             match = re.match(r'^(.*?)\s*([=<>]+)\s*(.*)$', cond.strip())
             if match:
-                col = closest_string(match.group(1).strip(), table_header)
+                col = closest_string(match.group(1).strip(), table_header)  # header_mapping.get(match.group(1).strip(), randint(0, len(header_mapping)-1))
                 op = cond_mapping.get(match.group(2).strip())
                 value = match.group(3).strip()
 
-                canonical_form['conds'].add((col, op, value))
+                canonical_form['conds'].add((col, op, value))  # append((col, op, value))
             else:
                 continue  # Skip invalid condition
 
