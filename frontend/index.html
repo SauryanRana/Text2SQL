@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text2SQL Demo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        /* Custom Styling */
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 900px;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        pre {
+            background-color: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: "Courier New", monospace;
+        }
+
+        table {
+            background: white;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Text2SQL Demo</h1>
+
+        <!-- Load Sample Button -->
+        <div class="d-grid gap-2 col-6 mx-auto">
+            <button id="loadSample" class="btn btn-primary">🔄 Load Random Sample</button>
+        </div>
+
+        <!-- Table & Question Section -->
+        <div class="card mt-4 p-4">
+            <h2 class="mb-3">📊 Sample Table</h2>
+            <div class="table-responsive">
+                <table id="table" class="table table-striped table-bordered"></table>
+            </div>
+
+            <h2 class="mt-4">❓ Question</h2>
+            <p id="question" class="p-3 bg-light rounded"></p>
+        </div>
+
+        <!-- Custom Question Input -->
+        <div class="card mt-4 p-4">
+            <h2>💡 Ask a Custom Question</h2>
+            <div class="input-group mb-3">
+                <input type="text" id="customQuestionInput" class="form-control" placeholder="Enter your question">
+                <button id="predict" class="btn btn-primary">🚀 Predict SQL Query</button>
+            </div>
+        </div>
+
+        <!-- Model Output & Generated Query -->
+        <div class="card mt-4 p-4">
+            <h2>🤖 Model Output</h2>
+            <pre id="modelOutput" class="bg-light p-3 rounded">Waiting for prediction...</pre>
+
+            <h2 class="mt-4">📝 Generated SQL Query</h2>
+            <pre id="generatedQuery" class="bg-light p-3 rounded">No query generated yet...</pre>
+
+            <div class="d-grid gap-2 mt-3">
+                <button id="executeQuery" class="btn btn-success">⚡ Execute Query</button>
+            </div>
+        </div>
+
+        <!-- Query Result -->
+        <div class="card mt-4 p-4">
+            <h2>📌 Query Result</h2>
+            <pre id="queryResult" class="bg-light p-3 rounded">No results yet...</pre>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/script.js"></script>
+
+</body>
+</html>
