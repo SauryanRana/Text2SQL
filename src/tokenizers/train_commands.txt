@@ -1,7 +1,7 @@
 spm_train --input=tokenizer_training_data.txt --model_prefix=sp_16k_bpe_99 --vocab_size=16284 --character_coverage=0.99 --model_type=bpe --byte_fallback --user_defined_symbols=[SEP] --pad_id=3
 
-spm_train --input=tokenizer_training_data.txt --model_prefix=sp_8k_bpe_1 --vocab_size=8092 --character_coverage=1 --model_type=bpe --user_defined_symbols=[SEP] --pad_id=3
-
 spm_train --input=tokenizer_training_data.txt --model_prefix=sp_16k_unigram_99 --vocab_size=16284 --character_coverage=0.99 --model_type=unigram --byte_fallback --user_defined_symbols=[SEP] --pad_id=3
 
 spm_train --input=tokenizer_training_data.txt --model_prefix=sp_16k_unigram_1 --vocab_size=16284 --character_coverage=1 --model_type=unigram --user_defined_symbols=[SEP] --pad_id=3
+
+spm_train --input=encoded_tokenizer_training_data.txt --model_prefix=sp_2k_bpe_encoded --vocab_size=1947 --character_coverage=1 --model_type=bpe --user_defined_symbols=[SEP],[MAP],[/MAP]
