@@ -1,16 +1,9 @@
 name: text2sql
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python=3.12.4
-  - pytorch
-  - pytorch-cuda=12.4
-  - torchaudio
-  - torchvision
-  - tqdm
-  - conda-forge::outlines
-  - jupyter
-  - sqlparse
-  - accelerate
-  - conda-forge::records
+  - anaconda
+  - pip
+  - pip:
+    - -r requirements.txt
