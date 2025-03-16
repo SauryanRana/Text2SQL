@@ -37,42 +37,34 @@ This section provides steps to set up a conda environment for this project.
    conda deactivate
    ```
 
-5. **Start Training**
-   ```
-   # For base custom T5 model
-   python -m src.main --model base
-
-   # For efficient-tiny T5 model
-   python -m src.main --model efficient
-   ```
-
-
-### Repo structure to follow
+### Running the Model
 
 ```bash
+# For base custom T5 model
+python -m src.main --model base
 
+# For efficient-tiny T5 model
+python -m src.main --model efficient
+```
+
+### Project Structure
+
+```bash
 ├── Text2SQL/
 │   ├── data/
-│   │   └── preprocessed_wikisql/     # Processed data (e.g., tokenized) 
+│   │   └── preprocessed_wikisql/     # Preprocessed WikiSQL dataset
 │   │
 │   ├── src/
 │   │   ├── __init__.py              # Package initialization
-│   │   ├── train.py                 # Main training script
-│   │   ├── evaluate.py              # Evaluation script
-│   │   ├── data_processing.py       # Data loading and preprocessing
-│   │   ├── model.py                 # Model initialization and setup
-│   │   ├── utils.py                 # Utility functions (e.g., logging)
-│   │   └── custom_layers.py         # (Optional) Custom model layers if any
+│   │   ├── main.py                  # Entry point for training and inference
+│   │   ├── model.py                 # Model architecture definitions
+│   │   ├── dataset.py               # Dataset loading and processing
+│   │   ├── train.py                 # Training loop implementation
+│   │   ├── eval.py                  # Evaluation functions
+│   │   ├── tokenizer.py             # Tokenization utilities
+│   │   └── utils.py                 # Helper functions and utilities
 │   │
-│   ├── logs/
-│   │   └── training_logs/           # Training logs, output from Accelerate, etc.
-│   │
-│   ├── outputs/
-│   │   ├── checkpoints/             # Model checkpoints
-│   │   └── metrics/                 # Evaluation metrics (e.g., loss, accuracy)
-│   │
-│   │
-│   ├── .gitignore                   # Ignore files like checkpoints, data
+│   ├── .gitignore                   # Git ignore rules
 │   ├── README.md                    # Project documentation
 │   └── requirements.txt             # Python dependencies
 ```
