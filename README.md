@@ -1,4 +1,4 @@
-# Text-to-SQL Query Generator
+# Text-to-SQL
 
 ## Project Overview
 
