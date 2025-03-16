@@ -4,10 +4,6 @@
 
 This goal of this project it to develop a LLM from scratch that can translate text-based questions into SQL queries. Such a model is useful in scenarios where users need to interact with databases using natural language, making data access more intuitive. The project will follow a structured timeline, focusing on data collection, preprocessing, model setup, and iterative fine-tuning.
 
-
-## Contents
-
-
 ## Environment Setup
 
 This section provides steps to set up a conda environment for this project.
@@ -19,20 +15,27 @@ This section provides steps to set up a conda environment for this project.
 ### Setting Up the Environment
 1. **Create a new conda environment:**
    ```bash
-   conda create -n text2sql python==3.12.4
+   conda create -n t2sql python==3.12.4
    ```
 2. **Activate the environment:**
    ```bash
-   conda activate text2sql
+   conda activate t2sql
    ```
-3. **Deactivate when done:**
+3. **Install requirements:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Download the preprocessed data:**
+   Download the required data files from [Google Drive](https://drive.google.com/drive/folders/1Ep17N1jNFVyJYfwkMCJqx8lpEjBg_4-d?usp=sharing) and place them in the following structure:
+   ```
+   Text2SQL/
+   └── data/
+       └── preprocessed_wikisql/       # Preprocessed data files
+   ```
+5. **Deactivate when done:**
    ```bash
    conda deactivate
    ```
-
-4. **Download the preprocessed data (if not included)**
-   link
-
 
 5. **Start Training**
    ```
@@ -44,24 +47,13 @@ This section provides steps to set up a conda environment for this project.
    ```
 
 
-
-## Data Sources
-
-The datasets we are using include:
-
-- **WikiSQL Dataset**: [Data](https://github.com/salesforce/WikiSQL) ,[GD Link ](https://drive.google.com/drive/folders/1I9AiEDlMb_3KWWfLeVvfjHVK87h3nGHo?usp=drive_link), [Collab](https://colab.research.google.com/drive/1dOTP5Fir04MLDD0nS8YpenwnWp8uG-de?usp=sharing)
-- **Spider Dataset**: A large-scale Text-to-SQL dataset.
-- **Custom Datasets**: Any additional data gathered to meet specific project needs.
-
-
 ### Repo structure to follow
 
 ```bash
 
 ├── Text2SQL/
 │   ├── data/
-│   │   ├── WikiSQL/                     # Raw datasets go here
-│   │   └── preprocessed_wikisql/               # Processed data (e.g., tokenized) 
+│   │   └── preprocessed_wikisql/     # Processed data (e.g., tokenized) 
 │   │
 │   ├── src/
 │   │   ├── __init__.py              # Package initialization
