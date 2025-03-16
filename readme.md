@@ -1,4 +1,4 @@
-# Text-to-SQL (T2SQL) Project
+# Text-to-SQL Project
 
 ![Text-to-SQL Banner](demo.png) 
 
