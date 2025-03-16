@@ -4,7 +4,7 @@
 
 ## Introduction
 
-The **Text-to-SQL (Text2SQL) Project** is an AI-powered tool that converts natural language queries into SQL statements. This enables users to interact with databases effortlessly, without requiring SQL expertise. By leveraging machine learning and natural language processing (NLP), the system translates human-readable questions into executable database queries.
+The **Text-to-SQL Project** is an AI-powered tool that converts natural language queries into SQL statements. This enables users to interact with databases effortlessly, without requiring SQL expertise. By leveraging machine learning and natural language processing (NLP), the system translates human-readable questions into executable database queries.
 
 ## Installation and Setup
 
