@@ -14,45 +14,65 @@ This section provides steps to set up an environment for this project.
 
 ### Prerequisites
 
-We recommend using conda for your environment management since it bundles a separate python installation within the environment for the project which removes the need to juggle different python versions on your system. You can install it via [Anaconda](https://www.anaconda.com/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
-
-If you decide against it make sure you have Python 3.12.4 installed.
-
-### Setting Up the Environment
-
 Make sure to first clone this repository and navigate to it.
 
-#### Conda
+We recommend using conda for your environment management since it bundles a separate python installation within the environment for the project which removes the need to juggle different python versions on your system. You can install it via [Anaconda](https://www.anaconda.com/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
+
+If you decide against it make sure you have Python 3.12.4 installed and accessible via PATH.
 
 1. **Create a new conda environment and install python:**
    ```bash
-   conda env create --name text2sql python=3.12.4
+   conda create --name text2sql python=3.12.4
    ```
 2. **Activate the environment:**
    ```bash
    conda activate text2sql
-   ```
-3. **Install the platform-specific pytorch version using pip according to [the official website](https://pytorch.org/get-started/locally/).**
-4. **Install all remaining dependencies:**
-   ```bash
-   pip install -r requirements.txt
    ```
 3. **Deactivate when done:**
    ```bash
    conda deactivate
    ```
 
-#### No environment or inside Venv
+### Setting Up the Environment
 
-0. **Make sure python 3.12.4 is installed**
-
-1. **Optionally set up a virtual environment and path variables for python and pip**
-2. **Install the platform-specific pytorch version using pip according to [the official website](https://pytorch.org/get-started/locally/).**
-
-3. **Install all requirements:**
+1. **If you want to be able to train models or need GPU-support for any other reason, make sure a Pytorch-compatible [CUDA toolkit](https://developer.nvidia.com/cuda-toolkit-archive) (11.8, 12.4 or 12.6) is installed:**
    ```bash
-   py -m pip install -r requirements.txt
+   nvcc --version
    ```
+2. **Install the platform-specific pytorch version using pip according to [the official website](https://pytorch.org/get-started/locally/):**
+   - CPU: 
+   ```bash
+   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+   ```
+   - CUDA 11.8:
+    ```bash
+   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+   ```
+   - CUDA 12.4:
+    ```bash
+   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+   ```
+   - CUDA 12.6:
+    ```bash
+   pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+   ```
+3. **Install all remaining dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Usage
+
+Start up a jupyter notebook client to play with our project:
+   ```bash
+   jupyter notebook
+   ```
+
+Use the inference.ipynb notebook to run inference on one of our pretrained models or on a model you trained yourself.
+
+Use the train.ipynb notebook to create, train and save a model yourself.
+
+Use the evaluation.ipynb notebook to run model inference on an entire dataset (validation data per default) and evaluate the models' performance.
 
 ## Dataset
 

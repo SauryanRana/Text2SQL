@@ -1,9 +1,0 @@
-name: text2sql
-channels:
-  - conda-forge
-dependencies:
-  - python=3.12.4
-  - anaconda
-  - pip
-  - pip:
-    - -r requirements.txt
