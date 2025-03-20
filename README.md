@@ -1,4 +1,4 @@
-# Efficint Methods in Machine Learning: Text-to-SQL
+# Efficient Methods in Machine Learning: Text-to-SQL
 
 ## Project Overview
 
