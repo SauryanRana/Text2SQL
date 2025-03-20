@@ -4,10 +4,6 @@
 
 The goal of this project was to solve a language task using machine learning. The architecture was constrained by the condition that it has to be small enough to be executed on a consumer-grade laptop. The task we chose is the text-to-sql task, where natural language questions or instructions shall be translated into a valid sql query, which can then be used to query the database. Ideally this allows integration into a system that hides the underlying logic and simply allows to query a database using a natural language prompt.
 
-
-## Contents
-
-
 ## Environment Setup
 
 This section provides steps to set up an environment for this project.
